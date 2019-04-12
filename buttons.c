@@ -1,14 +1,15 @@
 
-
 #include <ti/devices/msp432p4xx/driverlib/driverlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "buttons.h"
 #include "timer.h"
+#include "leds.h"
 
-static ButtonPin b1 = {.port = GPIO_PORT_P2 , .pin= GPIO_PIN4};
-static ButtonPin b2 = {.port = GPIO_PORT_P2 , .pin= GPIO_PIN5};
-static ButtonPin b3 = {.port = GPIO_PORT_P3 , .pin= GPIO_PIN2};
+
+static ButtonPin b1 = {.port = GPIO_PORT_P2 , .pin= GPIO_PIN4}; //start
+static ButtonPin b2 = {.port = GPIO_PORT_P2 , .pin= GPIO_PIN5}; //time up
+static ButtonPin b3 = {.port = GPIO_PORT_P3 , .pin= GPIO_PIN2}; //reset
 
 
 void button_setup(void){
@@ -32,7 +33,7 @@ void button_setup(void){
 
         /* register interrupt handler */
         MAP_GPIO_registerInterrupt(b1.port, &handleButtonPress);
-        MAP_GPIO_registerInterrupt(b3.port, &Reset);
+        MAP_GPIO_registerInterrupt(b3.port, &reset);
 
         /* enable interrupts for specific pins */
         MAP_GPIO_enableInterrupt(b1.port, b1.pin);
@@ -44,25 +45,39 @@ void button_setup(void){
         MAP_Interrupt_enableInterrupt(INT_PORT2);
         MAP_Interrupt_enableInterrupt(INT_PORT3);
 
+        /*
+         * Sets the time value to zero initially
+         */
+        time = 0;
+        LED_ON = false;
+
 }
 
 void handleButtonPress(void){
-    uint32_t status;
-    status = MAP_GPIO_getEnabledInterruptStatus(b1.port);
+    uint32_t status1;
+//stores the value of the button which generated the interrupt
+    status1 = MAP_GPIO_getEnabledInterruptStatus(b1.port);
 
-    if((status & b1.pin) && (status & b2.pin))
+//Checks if both buttons are pressed simultaneously
+    if((status1 & b1.pin) && (status1 & b2.pin))
         return;
-    else if(status & b1.pin)
+//checks if button 1 was pressed
+    else if(status1 & b1.pin)
         handleStart();
-
-    else if(status & b2.pin)
+//checks if button 2 was pressed
+    else if(status1 & b2.pin)
         handleUp();
 
 }
+//Deals with the 'start' button press
 void handleStart(void){
-if(time = 0)
+if(time == 0)
     return;
-else if(time>0)
+else if(time>0 & !(LED_ON))
     setup_timer();
+    LEDON();
 
+}
+void handleUp(void){
+    time = time + 900;
 }

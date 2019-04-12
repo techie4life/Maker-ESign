@@ -52,11 +52,17 @@
 /* Standard Includes */
 #include <stdint.h>
 #include <stdbool.h>
+#include "buttons.h"
+#include "timer.h"
+#include "leds.h"
+
 
 int main(void)
 {
     /* Stop Watchdog  */
     MAP_WDT_A_holdTimer();
+
+    button_setup();
 
     while(1)
     {
