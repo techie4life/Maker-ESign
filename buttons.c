@@ -6,6 +6,11 @@
 #include "timer.h"
 #include "leds.h"
 
+/*
+ * Start = P2.4
+ * Time-Up = P2.5
+ * Reset = P3.2
+ */
 
 static ButtonPin b1 = {.port = GPIO_PORT_P2 , .pin= GPIO_PIN4}; //start
 static ButtonPin b2 = {.port = GPIO_PORT_P2 , .pin= GPIO_PIN5}; //time up
@@ -18,6 +23,7 @@ void button_setup(void){
         MAP_GPIO_setAsInputPinWithPullDownResistor(b1.port, b1.pin);
         MAP_GPIO_setAsInputPinWithPullDownResistor(b2.port, b2.pin);
         MAP_GPIO_setAsInputPinWithPullDownResistor(b3.port, b3.pin);
+        MAP_GPIO_setAsOutputPin(GPIO_PORT_P2,GPIO_PIN6);
 
         /* setup interrupts */
         MAP_GPIO_clearInterruptFlag(b1.port, b1.pin);
@@ -45,39 +51,49 @@ void button_setup(void){
         MAP_Interrupt_enableInterrupt(INT_PORT2);
         MAP_Interrupt_enableInterrupt(INT_PORT3);
 
+        MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2,GPIO_PIN6);
         /*
          * Sets the time value to zero initially
          */
-        time = 0;
-        LED_ON = false;
+        time = 0; //initial time
+        RESET = true; //reset state
+        COUNTDOWN = false; //countdown state, when the timer is running
+        SETTIME = false; //state where a time != 0
 
 }
 
 void handleButtonPress(void){
-    uint32_t status1;
+    uint32_t status;
 //stores the value of the button which generated the interrupt
-    status1 = MAP_GPIO_getEnabledInterruptStatus(b1.port);
+    status = MAP_GPIO_getEnabledInterruptStatus(b1.port);
+
+    /* clear the interrupt flag to indicate we have handled interrupt */
+    MAP_GPIO_clearInterruptFlag(b1.port, status);
 
 //Checks if both buttons are pressed simultaneously
-    if((status1 & b1.pin) && (status1 & b2.pin))
-        return;
-//checks if button 1 was pressed
-    else if(status1 & b1.pin)
-        handleStart();
-//checks if button 2 was pressed
-    else if(status1 & b2.pin)
-        handleUp();
+    if((status & b1.pin) && (status & b2.pin));
 
+
+//checks if button 1 was pressed
+    else if(status & b1.pin){
+        handleStart();
+    }
+//checks if button 2 was pressed
+    else if(status & b2.pin){
+        handleUp();
+        SETTIME = true;
+        RESET = false;
+    }
 }
 //Deals with the 'start' button press
 void handleStart(void){
-if(time == 0)
-    return;
-else if(time>0 & !(LED_ON))
+
+if(time>0 && (SETTIME == true) && (RESET == false)){
     setup_timer();
     LEDON();
-
+}
 }
 void handleUp(void){
-    time = time + 900;
+    time = time + 15; //minutes
+    timeseconds = time * 60; //seconds
 }

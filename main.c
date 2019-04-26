@@ -57,15 +57,18 @@
 #include "leds.h"
 
 
-int main(void)
-{
+int main(void){
     /* Stop Watchdog  */
+
     MAP_WDT_A_holdTimer();
 
     button_setup();
 
+    MAP_Interrupt_enableMaster();
+
+
     while(1)
     {
-        
+        MAP_PCM_gotoLPM3InterruptSafe();
     }
 }

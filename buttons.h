@@ -3,7 +3,11 @@ typedef struct {
     uint_fast16_t pin;
 } ButtonPin;
 int time;
-bool LED_ON;
+int timeseconds;
+int changetime;
+bool RESET;
+bool COUNTDOWN;
+bool SETTIME;
 void handleStart(void);
 void handleUp(void);
 void handleButtonPress(void);
